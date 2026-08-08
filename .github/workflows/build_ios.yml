@@ -1,0 +1,186 @@
+name: Build iOS Client
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build iOS IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Create iOS Platform Folder
+        run: |
+          cd OpenBoardFlutter
+          flutter create --platforms=ios .
+
+      - name: Configure iOS Permissions and Deployment Target
+        run: |
+          python3 << 'EOF'
+          import os, re, textwrap, plistlib
+          # 1. Add camera, photo library and microphone permissions to Info.plist using plistlib
+          plist_path = 'OpenBoardFlutter/ios/Runner/Info.plist'
+          with open(plist_path, 'rb') as f:
+              pl = plistlib.load(f)
+          pl['NSCameraUsageDescription'] = '我们需要您的相机权限来扫描二维码。'
+          pl['NSPhotoLibraryUsageDescription'] = '我们需要您的相册权限来识别相册中的二维码。'
+          pl['NSMicrophoneUsageDescription'] = '我们需要您的麦克风权限来识别视频消息（可选）。'
+          with open(plist_path, 'wb') as f:
+              plistlib.dump(pl, f)
+
+          # 2. Write standard Flutter Podfile with deployment target 13.0 (required by mobile_scanner)
+          podfile_path = 'OpenBoardFlutter/ios/Podfile'
+          podfile_content = textwrap.dedent('''\
+              platform :ios, '13.0'
+
+              ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+              project 'Runner', {
+                'Debug' => :debug,
+                'Profile' => :release,
+                'Release' => :release,
+              }
+
+              def flutter_root
+                generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+                unless File.exist?(generated_xcode_build_settings_path)
+                  raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+                end
+
+                File.foreach(generated_xcode_build_settings_path) do |line|
+                  matches = line.match(/FLUTTER_ROOT=(.*)/)
+                  return matches[1] if matches
+                end
+                raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig and running flutter pub get"
+              end
+
+              require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+              flutter_ios_podfile_setup
+
+              target 'Runner' do
+                use_frameworks!
+                use_modular_headers!
+
+                flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+              end
+
+              post_install do |installer|
+                flutter_post_install(installer) if defined?(flutter_post_install)
+                installer.pods_project.targets.each do |target|
+                  flutter_additional_ios_build_settings(target)
+                  target.build_configurations.each do |config|
+                    config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
+                  end
+                end
+                installer.pods_project.build_configurations.each do |config|
+                  config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
+                end
+              end
+          ''')
+          with open(podfile_path, 'w') as f:
+              f.write(podfile_content)
+
+          # 3. Update project.pbxproj deployment target to 13.0 and bypass signing
+          proj_path = 'OpenBoardFlutter/ios/Runner.xcodeproj/project.pbxproj'
+          with open(proj_path, 'r') as f:
+              proj_content = f.read()
+          proj_content = proj_content.replace('IPHONEOS_DEPLOYMENT_TARGET = 11.0', 'IPHONEOS_DEPLOYMENT_TARGET = 13.0')
+          proj_content = proj_content.replace('IPHONEOS_DEPLOYMENT_TARGET = 12.0', 'IPHONEOS_DEPLOYMENT_TARGET = 13.0')
+          
+          # Force Manual signing style in TargetAttributes
+          import re
+          proj_content = re.sub(r'CreatedOnToolsVersion\s*=\s*([^;]+);', r'CreatedOnToolsVersion = \1;\n\t\t\t\t\t\tProvisioningStyle = Manual;', proj_content)
+          proj_content = proj_content.replace('ProvisioningStyle = Automatic;', 'ProvisioningStyle = Manual;')
+          
+          # Remove Code Sign Identity and Development Team settings
+          proj_content = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*[^;]+;', 'CODE_SIGN_IDENTITY = "";', proj_content)
+          proj_content = re.sub(r'CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]\s*=\s*[^;]+;', 'CODE_SIGN_IDENTITY[sdk=iphoneos*] = "";', proj_content)
+          proj_content = re.sub(r'DEVELOPMENT_TEAM\s*=\s*[^;]+;', 'DEVELOPMENT_TEAM = ABCDE12345;', proj_content)
+          
+          # Inject CODE_SIGNING_ALLOWED = NO, CODE_SIGNING_REQUIRED = NO and DEVELOPMENT_TEAM = ABCDE12345 after code sign identities
+          proj_content = proj_content.replace('CODE_SIGN_IDENTITY = "";', 'CODE_SIGN_IDENTITY = "";\n          CODE_SIGNING_ALLOWED = NO;\n          CODE_SIGNING_REQUIRED = NO;\n          DEVELOPMENT_TEAM = ABCDE12345;')
+          proj_content = proj_content.replace('CODE_SIGN_IDENTITY[sdk=iphoneos*] = "";', 'CODE_SIGN_IDENTITY[sdk=iphoneos*] = "";\n          CODE_SIGNING_ALLOWED = NO;\n          CODE_SIGNING_REQUIRED = NO;\n          DEVELOPMENT_TEAM = ABCDE12345;')
+          
+          with open(proj_path, 'w') as f:
+              f.write(proj_content)
+
+          # 4. Append bypass settings to Flutter's xcconfig files
+          config_dir = 'OpenBoardFlutter/ios/Flutter'
+          for config_file in ['Debug.xcconfig', 'Release.xcconfig']:
+              path = os.path.join(config_dir, config_file)
+              if os.path.exists(path):
+                  with open(path, 'a') as f:
+                      f.write('\nCODE_SIGNING_ALLOWED = NO\nCODE_SIGNING_REQUIRED = NO\nCODE_SIGN_IDENTITY =\nDEVELOPMENT_TEAM = ABCDE12345\n')
+          EOF
+
+      - name: Get Dependencies
+        run: |
+          cd OpenBoardFlutter
+          flutter pub get
+
+      - name: Generate Launcher Icons
+        run: |
+          cd OpenBoardFlutter
+          dart run flutter_launcher_icons
+
+      - name: Build iOS App (Unsigned)
+        run: |
+          cd OpenBoardFlutter
+          flutter build ios --no-codesign
+          flutter build ios --simulator --no-codesign
+
+      - name: Pack App and Simulator Build
+        run: |
+          mkdir -p build-output
+          # Pack IPA for real devices
+          cd OpenBoardFlutter/build/ios/iphoneos
+          mkdir Payload
+          mv Runner.app Payload/
+          zip -r ../../../../build-output/OpenBoard-iOS-v7.7.0-Unsigned.ipa Payload
+          cd ../../../..
+          # Pack Simulator App for online simulators (e.g., Appetize.io)
+          cd OpenBoardFlutter/build/ios/iphonesimulator
+          zip -r ../../../../build-output/OpenBoard-iOS-v7.7.0-Simulator.app.zip Runner.app
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenBoard-iOS-Unsigned
+          path: build-output/OpenBoard-iOS-v7.7.0-Unsigned.ipa
+
+      - name: Upload Simulator Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenBoard-iOS-Simulator
+          path: build-output/OpenBoard-iOS-v7.7.0-Simulator.app.zip
+
+      - name: Upload iOS Builds to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" \
+            build-output/OpenBoard-iOS-v7.7.0-Unsigned.ipa \
+            build-output/OpenBoard-iOS-v7.7.0-Simulator.app.zip \
+            --clobber
