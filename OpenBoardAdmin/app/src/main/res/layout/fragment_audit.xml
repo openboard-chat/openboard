@@ -1,9 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  「操作记录」页。
+
+  顶部是一条筛选栏：关键字 + 时间区间 + 来源下拉。
+  合并展示全局操作与群内操作后，记录量会比以前大一个量级 ——
+  没有筛选的话，要翻很久才能找到"上周谁把某人提权了"。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F6F7F9"
     android:orientation="vertical">
+
+    <!-- 筛选栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:orientation="vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etActor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#F1F3F6"
+                android:hint="操作者用户名"
+                android:inputType="text"
+                android:maxLength="64"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/etAction"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="#F1F3F6"
+                android:hint="动作，如 admin.ban"
+                android:inputType="text"
+                android:maxLength="64"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etFrom"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#F1F3F6"
+                android:focusable="false"
+                android:hint="起始日期"
+                android:inputType="none"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/etTo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="#F1F3F6"
+                android:focusable="false"
+                android:hint="结束日期"
+                android:inputType="none"
+                android:maxLines="1"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- 来源：全部 / 全局 / 群内 -->
+            <Spinner
+                android:id="@+id/spSource"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#F1F3F6" />
+
+            <Button
+                android:id="@+id/btnQuery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:minWidth="0dp"
+                android:paddingHorizontal="18dp"
+                android:text="查询" />
+
+            <Button
+                android:id="@+id/btnClear"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:minWidth="0dp"
+                android:paddingHorizontal="14dp"
+                android:text="清空" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvAuditCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="#6B7280"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe"
@@ -30,7 +163,17 @@
                 android:clipToPadding="false"
                 android:paddingHorizontal="12dp"
                 android:paddingTop="10dp"
-                android:paddingBottom="24dp" />
+                android:paddingBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnMore"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="16dp"
+                android:text="加载更多"
+                android:visibility="gone" />
         </LinearLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>
