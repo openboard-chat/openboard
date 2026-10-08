@@ -49,6 +49,10 @@ OpenBoardHarmony/entry/local.properties
 # 发布产物（APK 走 GitHub Release 附件，不入库）
 releases/
 
+# ⚠️ 含明文凭据（GitHub token / Cloudflare API Token / 各类密码）。
+#    一旦入库就会永久留在 git 历史里，改写历史极其麻烦。绝不能解除这行。
+OpenBoard-重要信息总览.md
+
 # Cloudflare 版构建产物
 node_modules/
 .wrangler/
