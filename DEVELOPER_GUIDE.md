@@ -456,7 +456,7 @@ v4.0.0 之后项目新增了消息可靠性、群管理、安全中心等大量�
   ```json
   {
     "version": "v9.0.0",
-    "repo": "luojunqi20111219/OpenBoard-...",
+    "repo": "openboard-chat/openboard",
     "runtime": "cloudflare-workers",   // 或 "fastapi"
     "force_update": false
   }

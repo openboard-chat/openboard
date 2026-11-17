@@ -52,8 +52,8 @@
 在终端中执行以下命令进行编译：
 
 ```bash
-git clone https://github.com/luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform.git
-cd OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform/OpenBoardAndroid
+git clone https://github.com/openboard-chat/openboard.git
+cd openboard/OpenBoardAndroid
 ./gradlew assembleDebug
 ```
 

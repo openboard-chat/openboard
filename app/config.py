@@ -26,7 +26,7 @@ class Config:
     JWT_ALGORITHM = "HS256"
     JWT_EXP_MINUTES = 60 * 24 * 7  # 7 days
     CURRENT_VERSION = "v9.0.0"
-    REPO_URL = "luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform"
+    REPO_URL = "openboard-chat/openboard"
     ALLOWED_ADMINS = ["官方账号", "Forest_siri", "Forest_Brian_Birch"]  # Legacy fallback for backwards compatibility
 
 

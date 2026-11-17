@@ -66,7 +66,7 @@ curl --version | head -1
 **不用拷文件，不用建目录**。Termux 里粘这一行：
 
 ```bash
-pkg update -y && pkg install -y python curl && curl -sL "https://cdn.jsdelivr.net/gh/luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform@main/tools/cf-optimize/install.sh" -o install.sh && bash install.sh
+pkg update -y && pkg install -y python curl && curl -sL "https://cdn.jsdelivr.net/gh/openboard-chat/openboard@main/tools/cf-optimize/install.sh" -o install.sh && bash install.sh
 ```
 
 `install.sh` 里已经**内嵌**了扫描脚本（base64），下载完直接就能跑，
@@ -92,7 +92,7 @@ pkg update -y && pkg install -y python curl && curl -sL "https://cdn.jsdelivr.ne
 最坏情况下，你可以**完全离线**跑：
 
 1. 在能上网的设备上打开
-   https://cdn.jsdelivr.net/gh/luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform@main/tools/cf-optimize/install.sh
+   https://cdn.jsdelivr.net/gh/openboard-chat/openboard@main/tools/cf-optimize/install.sh
 2. 全选复制
 3. Termux 里执行 `cat > install.sh`，粘贴，然后按 `Ctrl+D` 结束输入
 4. `bash install.sh`

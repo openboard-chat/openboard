@@ -940,7 +940,7 @@ messageRoutes.get('/check_update', async (c) => {
   const e = env(c);
   return c.json({
     version: e.CURRENT_VERSION || 'v9.0.0',
-    repo: 'luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform',
+    repo: 'openboard-chat/openboard',
     runtime: 'cloudflare-workers',
     force_update: false,
   });

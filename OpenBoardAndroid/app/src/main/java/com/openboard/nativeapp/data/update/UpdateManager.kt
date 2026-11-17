@@ -102,7 +102,7 @@ object UpdateManager {
                     val body = response.body()!!
                     if (body.status == "success") {
                         val latestVersion = body.latest ?: "v10.0.0"
-                        val rawDownloadUrl = body.downloadUrl ?: "https://github.com/luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform/releases/download/v10.0.0/app-debug.apk"
+                        val rawDownloadUrl = body.downloadUrl ?: "https://github.com/openboard-chat/openboard/releases/download/v10.0.0/app-debug.apk"
                         val changelog = body.body ?: "OpenBoard V10.0.0 管理员体系上线！"
                         
                         // Compare version

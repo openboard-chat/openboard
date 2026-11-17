@@ -8,7 +8,7 @@
 
 > [!NOTE]
 > 上次代码推送至 GitHub 远程仓库。
-> *   **远程仓库**: [OpenBoard](https://github.com/luojunqi20111219/OpenBoard-A-modern-minimalist-lightweight-group-chat-and-messaging-platform.git)
+> *   **远程仓库**: [OpenBoard](https://github.com/openboard-chat/openboard.git)
 > *   **推送分支**: `main`
 > *   **最新提交 Hash**: `91c4bda...`
 >
